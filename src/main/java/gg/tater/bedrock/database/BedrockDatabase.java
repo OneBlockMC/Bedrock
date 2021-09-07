@@ -16,10 +16,12 @@ import lombok.SneakyThrows;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ExecutionException;
 
 public final class BedrockDatabase {
 
@@ -34,20 +36,25 @@ public final class BedrockDatabase {
 
     private final Map<Class<?>, RedisEntity<?>> entityIdentityMap = Collections.synchronizedMap(Maps.newIdentityHashMap());
 
+    @Getter
+    private final String channelName = "object_channel";
+
     public BedrockDatabase(Credentials credentials) {
         this.credentials = credentials;
+
         this.client = RedisClient.create(RedisURI.builder()
                 .withHost(credentials.getHost())
                 .withPort(credentials.getPort())
                 .withDatabase(credentials.getDatabase())
                 .withPassword(credentials.getPassword())
+                .withTimeout(Duration.ofSeconds(5L))
                 .build());
 
         this.pool = ConnectionPoolSupport.createGenericObjectPool(client::connect, new GenericObjectPoolConfig<>());
 
         StatefulRedisPubSubConnection<String, String> pubSub = client.connectPubSub();
         pubSub.addListener(new PubSubListener(this));
-        pubSub.sync().subscribe(credentials.getChannelName());
+        pubSub.sync().subscribe(channelName);
     }
 
     public <T> void publish(T provided) {
@@ -57,7 +64,7 @@ public final class BedrockDatabase {
             jsonObject.addProperty("class", provided.getClass().getName());
             jsonObject.addProperty("content", entity.toJsonString(provided));
 
-            getAsyncCommands().publish(credentials.getChannelName(), jsonObject.toString());
+            getAsyncCommands().publish(channelName, jsonObject.toString());
         });
     }
 
@@ -74,6 +81,7 @@ public final class BedrockDatabase {
         return Optional.empty();
     }
 
+    // o(n) be aware of time complexity
     @SneakyThrows
     public <T> List<T> getAllCachedEntities(Class<T> clazz) {
         List<T> entities = Lists.newArrayList();
@@ -95,6 +103,20 @@ public final class BedrockDatabase {
         return entities;
     }
 
+    public <T> Optional<T> popRandomElement(Class<T> clazz) throws ExecutionException, InterruptedException {
+        Optional<RedisEntity<T>> optional = getRegisteredEntity(clazz);
+
+        if (optional.isPresent()) {
+            RedisEntity<T> entity = optional.get();
+
+            return Optional.of(clazz.cast(
+                    entity.fromJsonString(getAsyncCommands()
+                            .srandmember(entity.hashName())
+                            .get(), clazz)));
+        }
+
+        return Optional.empty();
+    }
 
     public <T> void addToCache(T type, RedisEntity<T> redisEntity) {
         getAsyncCommands().hset(
@@ -124,5 +146,4 @@ public final class BedrockDatabase {
             return connection.async();
         }
     }
-
 }

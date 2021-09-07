@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public final class Credentials {
 
-    private final String host, password, channelName;
+    private final String host, password;
     private final int port;
     private final int database;
 
