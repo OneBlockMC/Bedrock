@@ -25,7 +25,10 @@ public class BedrockPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        getDatabase().ifPresent(database -> database.getClient().shutdown());
+        getDatabase().ifPresent(database -> {
+            database.getEntityIdentityMap().clear();
+            database.getClient().shutdown();
+        });
     }
 
     public static Optional<BedrockDatabase> getDatabase() {

@@ -34,7 +34,7 @@ public final class BedrockDatabase {
     @Getter
     private final GenericObjectPool<StatefulRedisConnection<String, String>> pool;
 
-    private final Map<Class<?>, RedisEntity<?>> entityIdentityMap = Collections.synchronizedMap(Maps.newIdentityHashMap());
+    @Getter private final Map<Class<?>, RedisEntity<?>> entityIdentityMap = Collections.synchronizedMap(Maps.newIdentityHashMap());
 
     @Getter
     private final String channelName = "object_channel";

@@ -30,8 +30,8 @@ public class PubSubListener extends RedisPubSubAdapter<String, String> {
 
                             entity.handle(object);
                         });
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+            } catch (ClassNotFoundException ignored) {
+
             }
         }
     }

@@ -13,5 +13,6 @@ public interface Bedrock {
     Gson SHARED_GSON = new GsonBuilder()
             .registerTypeAdapter(ItemStack.class, new ItemStackAdapter())
             .registerTypeAdapter(Location.class, new LocationAdapter())
-            .serializeNulls().create();
+            .serializeNulls()
+            .create();
 }
