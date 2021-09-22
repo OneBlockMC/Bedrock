@@ -1,15 +1,15 @@
 package gg.tater.bedrock.database.pubsub.entity;
 
-import gg.tater.bedrock.Bedrock;
+import gg.tater.bedrock.BedrockPlugin;
 
 public interface RedisEntity<T> {
 
     default String toJsonString(T type) {
-        return Bedrock.SHARED_GSON.toJson(type);
+        return BedrockPlugin.SHARED_GSON.toJson(type);
     }
 
     default Object fromJsonString(String data, Class<?> clazz) {
-        return Bedrock.SHARED_GSON.fromJson(data, clazz);
+        return BedrockPlugin.SHARED_GSON.fromJson(data, clazz);
     }
 
     void handle(T type);
