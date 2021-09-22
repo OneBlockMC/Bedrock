@@ -9,11 +9,11 @@ import org.bukkit.WorldCreator;
 @UtilityClass
 public class LocationUtil {
 
-    public static String serialize(Location location) {
+    public String serialize(Location location) {
         return location.getX() + ";" + location.getY() + ";" + location.getZ() + ";" + location.getYaw() + ";" + location.getPitch() + ";" + location.getWorld().getName();
     }
 
-    public static Location deserialize(String data) {
+    public Location deserialize(String data) {
         String[] split = data.split(";");
 
         double x = Double.parseDouble(split[0]);

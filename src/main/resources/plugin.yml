@@ -1,5 +1,5 @@
 name: Bedrock
 version: 1.0
-api-version: 1.13
+api-version: 1.16
 main: gg.tater.bedrock.BedrockPlugin
 author: Skinlesspotato
