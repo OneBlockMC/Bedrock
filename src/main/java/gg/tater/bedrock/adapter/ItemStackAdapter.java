@@ -15,21 +15,27 @@ import java.util.List;
 
 public class ItemStackAdapter implements JsonSerializer<ItemStack>, JsonDeserializer<ItemStack> {
 
+    private final String displayNameField = "display_name";
+    private final String enchantField = "enchants";
     private final String enchantKey = "enchant_key";
     private final String enchantLevel = "enchant_level";
+    private final String materialField = "material";
+    private final String amountField = "amount";
+    private final String loreField = "lore";
+    private final String lineDataField = "line_data";
 
     @Override
     public ItemStack deserialize(JsonElement element, Type type, JsonDeserializationContext context) throws JsonParseException {
         JsonObject object = (JsonObject) element;
 
-        Material material = Material.valueOf(object.get("material").getAsString());
-        int amount = object.get("amount").getAsInt();
+        Material material = Material.valueOf(object.get(materialField).getAsString());
+        int amount = object.get(amountField).getAsInt();
 
         ItemStack stack = new ItemStack(material, amount);
         ItemMeta meta = stack.getItemMeta();
 
         if (meta != null) {
-            JsonElement loreElement = object.get("lore");
+            JsonElement loreElement = object.get(loreField);
 
             if (loreElement != null) {
                 List<String> list = Lists.newArrayList();
@@ -37,13 +43,13 @@ public class ItemStackAdapter implements JsonSerializer<ItemStack>, JsonDeserial
                 loreElement.getAsJsonArray()
                         .forEach(loreArrayElement -> {
                             JsonObject loreObject = (JsonObject) loreArrayElement;
-                            list.add(loreObject.get("line_data").getAsString());
+                            list.add(loreObject.get(lineDataField).getAsString());
                         });
 
                 meta.setLore(list);
             }
 
-            JsonElement nameElement = object.get("display_name");
+            JsonElement nameElement = object.get(displayNameField);
             if (nameElement != null) {
                 meta.setDisplayName(nameElement.getAsString());
             }
@@ -52,7 +58,7 @@ public class ItemStackAdapter implements JsonSerializer<ItemStack>, JsonDeserial
         }
 
 
-        JsonElement enchantElement = object.get("enchants");
+        JsonElement enchantElement = object.get(enchantField);
 
         if (enchantElement != null) {
 
@@ -78,8 +84,8 @@ public class ItemStackAdapter implements JsonSerializer<ItemStack>, JsonDeserial
     @Override
     public JsonElement serialize(ItemStack stack, Type type, JsonSerializationContext context) {
         WrappedJsonObject object = new WrappedJsonObject()
-                .add("material", stack.getType().name())
-                .add("amount", stack.getAmount());
+                .add(materialField, stack.getType().name())
+                .add(amountField, stack.getAmount());
 
         if (!stack.getEnchantments().isEmpty()) {
             JsonArray enchantArray = new JsonArray();
@@ -91,24 +97,24 @@ public class ItemStackAdapter implements JsonSerializer<ItemStack>, JsonDeserial
                                     .add(enchantLevel, integer)
                                     .toRegularJsonObject()));
 
-            object.add("enchants", enchantArray);
+            object.add(enchantField, enchantArray);
         }
 
         ItemMeta meta = stack.getItemMeta();
 
         if (meta != null) {
             if (meta.hasDisplayName()) {
-                object.add("display_name", meta.getDisplayName());
+                object.add(displayNameField, meta.getDisplayName());
             }
 
             if (meta.getLore() != null) {
                 JsonArray loreArray = new JsonArray();
                 meta.getLore().forEach(string ->
                         loreArray.add(new WrappedJsonObject()
-                                .add("line_data", string)
+                                .add(lineDataField, string)
                                 .toRegularJsonObject()));
 
-                object.add("lore", loreArray);
+                object.add(loreField, loreArray);
             }
         }
 
